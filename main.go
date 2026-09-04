@@ -210,15 +210,27 @@ type UI struct {
 // POWERSHELL
 // ============================================================
 
+const createNoWindow = 0x08000000
+
+func hideProcessWindow(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow:    true,
+		CreationFlags: createNoWindow,
+	}
+}
+
 func runPowerShell(script string) ([]byte, error) {
 	cmd := exec.Command(
 		"powershell.exe",
 		"-NoProfile",
 		"-NonInteractive",
 		"-ExecutionPolicy", "Bypass",
+		"-WindowStyle", "Hidden",
 		"-Command",
 		"[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; "+script,
 	)
+
+	hideProcessWindow(cmd)
 
 	return cmd.CombinedOutput()
 }
@@ -328,6 +340,8 @@ func removeDevice(instanceID string) (string, error) {
 		instanceID,
 	)
 
+	hideProcessWindow(cmd)
+
 	out, err := cmd.CombinedOutput()
 
 	if err == nil {
@@ -345,6 +359,8 @@ func removeDevice(instanceID string) (string, error) {
 			instanceID,
 			"/force",
 		)
+
+		hideProcessWindow(cmd)
 
 		out, err = cmd.CombinedOutput()
 
